@@ -1,0 +1,11 @@
+postgresql:
+  adapter: postgresql
+  url: postgres://postgres:postgres@postgres:5432
+  database: postgresql_test
+mysql:
+  adapter: mysql2
+  url: mysql2://root:mysql@mysql:3306
+  database: mysql_test
+sqlite:
+  adapter: sqlite3
+  database: sqlite_test

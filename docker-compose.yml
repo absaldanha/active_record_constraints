@@ -1,0 +1,60 @@
+version: '2.4'
+
+services:
+  common: &common
+    build:
+      context: .
+      dockerfile: ./.dockerdev/Dockerfile.dev
+      args:
+        RUBY_VERSION: '3.1.3'
+        PG_MAJOR: '15'
+        BUNDLER_VERSION: '2.4.1'
+    image: active_record_constraints:1.0.0
+    tmpfs:
+      - /tmp
+
+  dev: &dev
+    <<: *common
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/app:cached
+      - bundle:/usr/local/bundle
+    links:
+      - postgres
+      - mysql
+    depends_on:
+      mysql:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:15.1
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432
+    healthcheck:
+      test: pg_isready -U postgres -h 127.0.0.1
+      interval: 5s
+
+  mysql:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql
+    ports:
+      - 3306
+    volumes:
+      - mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-ppass"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres:
+  mysql:
+  bundle:
